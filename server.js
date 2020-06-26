@@ -88,6 +88,15 @@ function startApp() {
       });
   }
 
+  // Variable holding the sql syntex to join in the database 
+const tableAll = (`SELECT employee.id, first_name, last_name, title, role_id, salary, manager_id
+FROM employee
+INNER JOIN role
+ON employee.role_id = role.id
+INNER JOIN department
+ON role.department_id = department.id`);
+
+
   // Add new Departments 
 const addDepartments = () => {
 
@@ -175,25 +184,28 @@ const addEmployeeRole = () => {
   })
 }
 
+//View all Employee roles
+const viewRoles = () => {
+  connection.query("SELECT id, title FROM role", (err, res) => {
+    if (err) throw err;
+    console.table(res);
+    startApp();
+  })
+};
+
 //  Adds new employees
 const addEmployee = () => {
   let newDept = [];
   connection.query("SELECT * FROM department", (err, res) => {
     res.forEach(element => {
-      newDept.push(`${element.id} ${element.dept}`);
+      newDept.push(`${element.id} ${element.department_name}`);
     })
     let newPosition = [];
     connection.query("SELECT id, title FROM role", (err, res) => {
       res.forEach(element => {
         newPosition.push(`${element.id} ${element.title}`);
       })
-      let newManager = [];
-      connection.query(`SELECT id, first_name, last_name FROM employee`, (err, res) => {
-        res.forEach(element => {
-          newManager.push(`${element.id} ${element.first_name} ${element.last_name}`)
-
-        })
-
+      
         inquirer.prompt([
           {
             name: "first",
@@ -217,42 +229,111 @@ const addEmployee = () => {
             message: "Choose employee's role",
             choices: newPosition
           },
-          {
-            name: "manager",
-            type: "list",
-            message: "Choose employee's manager",
-            choices: newManager
-          }
+
         ]).then(res => {
           let roleCode = parseInt(res.role);
-          let mgrCode = parseInt(res.manager)
           connection.query(
             "INSERT INTO employee SET ?",
             {
               first_name: res.first,
               last_name: res.last,
               role_id: roleCode,
-              manager_id: mgrCode
             }, (err, res) => {
               if (err) throw err
             }
           )
-          connection.query(mgrTable, (err, res) => {
+          connection.query(roleCode, (err, res) => {
             if (err) throw err;
             console.table(res);
-            ask();
+            startApp();
           })
+        })
+      })
+    })
+  }
+
+//Employees with all values
+const viewEmployees = () => {
+  connection.query("SELECT * FROM employee", (err, res) => {
+    if (err) throw err;
+    console.table(res);
+    startApp();
+  })
+};
+
+// Update Employee Role
+
+const updateRole = () => {
+  const employees = [];
+
+  connection.query(`SELECT  id, first_name, last_name FROM employee`, (err, res) => {
+    res.forEach(element => {
+      employees.push(`${element.id} ${element.first_name} ${element.last_name}`);
+    });
+    let newPosition = [];
+    connection.query("SELECT id, title FROM role", (err, res) => {
+      res.forEach(element => {
+        newPosition.push(`${element.id} ${element.title}`);
+      })
+
+      inquirer.prompt([
+        {
+          name: "update",
+          type: "list",
+          message: "Choose employee whose role you woule like to update?",
+          choices: employees
+        },
+        {
+          name: "role",
+          type: "list",
+          message: "Choose employee's role",
+          choices: newPosition
+        }
+      ]).then(res => {
+         //response parsed to acquire int values from database
+        let roleCode = parseInt(res.role);
+        let empID = parseInt(res.update);
+        connection.query(
+          `UPDATE employee SET role_id = ${roleCode} WHERE id = ${empID}`,
+          (err, res) => {
+            if (err) throw err
+          }
+        )
+        connection.query(tableAll, (err, res) => {
+          if (err) throw err;
+          console.table(res);
+          startApp();
         })
       })
     })
   })
 }
 
-//Employees with all values
-const viewEmployees = () => {
-  connection.query(employee, (err, res) => {
-    if (err) throw err;
-    console.table(res);
-    startApp();
+// Function that removes employees from database
+const removeEmployee = () => {
+  let active = [];
+
+  connection.query(`SELECT  id, first_name, last_name FROM employee`, (err, res) => {
+    res.forEach(element => {
+      active.push(`${element.id} ${element.first_name} ${element.last_name}`);
+    });
+
+    inquirer.prompt(
+      {
+        name: "remove",
+        type: "list",
+        message: "Who would you like to remove?",
+        choices: active
+      }
+
+    ).then(response => {
+      console.log(response);
+      let empID = parseInt(response.remove);
+
+      connection.query(`DELETE FROM employee WHERE id = ${empID}`, (err, res) => {
+        console.table(response);
+        startApp();
+      })
+    })
   })
-};
+}
