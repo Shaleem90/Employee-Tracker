@@ -26,70 +26,70 @@ connection.connect(err => {
 
 //Start app
 function startApp() {
-    inquirer
-      .prompt({
-        name: "action",
-        type: "list",
-        message: "What would you like to do?",
-        choices: [
-          "Add New Department",
-          "View all Departments",
-          "Add new Employee Role",
-          "View all employees Roles",
-          "Add Employee",
-          "View All Employees",
-          "Update Employee Role",
-          "Remove an Employee",
-          "Exit"
-        ]
-      })
-      .then(response => {
-        switch (response.action) {
-          case "Add New Department":
-            addDepartments();
-            break;
-  
-          case "View all Departments":
-            viewDepartments();
-            break;
-  
-          case "Add new Employee Role":
-            addEmployeeRole();
-            break;
-  
-          case "View all employees Roles":
-            viewRoles();
-            break;
-  
-          case "Add Employee":
-            addEmployee();
-            break;
-  
-          case "View All Employees":
-            viewEmployees();
-            break;
-  
-          case "Add New Department to the Company":
-            addDepartment();
-            break;
+  inquirer
+    .prompt({
+      name: "action",
+      type: "list",
+      message: "What would you like to do?",
+      choices: [
+        "Add New Department",
+        "View all Departments",
+        "Add new Employee Role",
+        "View all employees Roles",
+        "Add Employee",
+        "View All Employees",
+        "Update Employee Role",
+        "Remove an Employee",
+        "Exit"
+      ]
+    })
+    .then(response => {
+      switch (response.action) {
+        case "Add New Department":
+          addDepartments();
+          break;
 
-            case "Update Employee Role":
-                updateRole();
-                break;
-  
-          case "Remove an Employee":
-            removeEmployee();
-            break;
-  
-          case "Exit":
-            connection.end();
-            break;
-        }
-      });
-  }
+        case "View all Departments":
+          viewDepartments();
+          break;
 
-  // Variable holding the sql syntex to join in the database 
-const tableAll = (`SELECT employee.id, first_name, last_name, title, role_id, salary, manager_id
+        case "Add new Employee Role":
+          addEmployeeRole();
+          break;
+
+        case "View all employees Roles":
+          viewRoles();
+          break;
+
+        case "Add Employee":
+          addEmployee();
+          break;
+
+        case "View All Employees":
+          viewEmployees();
+          break;
+
+        case "Add New Department to the Company":
+          addDepartment();
+          break;
+
+        case "Update Employee Role":
+          updateRole();
+          break;
+
+        case "Remove an Employee":
+          removeEmployee();
+          break;
+
+        case "Exit":
+          connection.end();
+          break;
+      }
+    });
+}
+
+// Variable holding the sql syntex to join in the database 
+const tblMain = (`SELECT employee.id, first_name, last_name, title, role_id, salary, manager_id
 FROM employee
 INNER JOIN role
 ON employee.role_id = role.id
@@ -97,7 +97,7 @@ INNER JOIN department
 ON role.department_id = department.id`);
 
 
-  // Add new Departments 
+// Add new Departments 
 const addDepartments = () => {
 
   inquirer
@@ -205,52 +205,52 @@ const addEmployee = () => {
       res.forEach(element => {
         newPosition.push(`${element.id} ${element.title}`);
       })
-      
-        inquirer.prompt([
-          {
-            name: "first",
-            type: "input",
-            message: "Enter employee's first name."
-          },
-          {
-            name: "last",
-            type: "input",
-            message: "Enter empoyee's last name."
-          },
-          {
-            name: "department",
-            type: "list",
-            message: "Choose employee's department",
-            choices: newDept
-          },
-          {
-            name: "role",
-            type: "list",
-            message: "Choose employee's role",
-            choices: newPosition
-          },
 
-        ]).then(res => {
-          let roleCode = parseInt(res.role);
-          connection.query(
-            "INSERT INTO employee SET ?",
-            {
-              first_name: res.first,
-              last_name: res.last,
-              role_id: roleCode,
-            }, (err, res) => {
-              if (err) throw err
-            }
-          )
-          connection.query(roleCode, (err, res) => {
-            if (err) throw err;
-            console.table(res);
-            startApp();
-          })
+      inquirer.prompt([
+        {
+          name: "first",
+          type: "input",
+          message: "Enter employee's first name."
+        },
+        {
+          name: "last",
+          type: "input",
+          message: "Enter empoyee's last name."
+        },
+        {
+          name: "department",
+          type: "list",
+          message: "Choose employee's department",
+          choices: newDept
+        },
+        {
+          name: "role",
+          type: "list",
+          message: "Choose employee's role",
+          choices: newPosition
+        },
+
+      ]).then(res => {
+        let roleCode = parseInt(res.role);
+        connection.query(
+          "INSERT INTO employee SET ?",
+          {
+            first_name: res.first,
+            last_name: res.last,
+            role_id: roleCode,
+          }, (err, res) => {
+            if (err) throw err
+          }
+        )
+        connection.query(roleCode, (err, res) => {
+          if (err) throw err;
+          console.table(res);
+          startApp();
         })
       })
     })
-  }
+  })
+}
 
 //Employees with all values
 const viewEmployees = () => {
@@ -290,7 +290,7 @@ const updateRole = () => {
           choices: newPosition
         }
       ]).then(res => {
-         //response parsed to acquire int values from database
+        //response parsed to acquire int values from database
         let roleCode = parseInt(res.role);
         let empID = parseInt(res.update);
         connection.query(
@@ -299,7 +299,7 @@ const updateRole = () => {
             if (err) throw err
           }
         )
-        connection.query(tableAll, (err, res) => {
+        connection.query(tblMain, (err, res) => {
           if (err) throw err;
           console.table(res);
           startApp();
